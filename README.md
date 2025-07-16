@@ -1,6 +1,6 @@
 # Hallyuhub | All In One K-Pop E-Commerce Platform
 
-![Project Status](https://img.shields.io/badge/status-in%8progress-yellow)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
@@ -42,7 +42,7 @@ To get a local copy up and running, follow these simple steps.
 
 1.  Clone the repository:
     ```sh
-    git clone [https://github.com/meliocool/hallyuhub.git](https://github.com/meliocool/hallyuhub.git)
+    git clone https://github.com/meliocool/hallyuhub.git
     ```
 2.  Navigate to the project directory:
     ```sh
