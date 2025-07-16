@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded yellow background -->
+  <rect width="512" height="512" rx="48" fill="#f4b400"/>
+
+  <!-- Left Frame (rotated) -->
+  <g transform="rotate(-15 140 256)">
+    <rect x="90" y="130" width="170" height="200" rx="4" fill="white"/>
+    <rect x="100" y="140" width="150" height="120" fill="#f4b400"/>
+  </g>
+
+  <!-- Middle Frame (centered) -->
+  <g transform="rotate(0 190 256)">
+    <rect x="170" y="120" width="180" height="220" rx="4" fill="white"/>
+    <rect x="180" y="130" width="160" height="130" fill="#f4b400"/>
+  </g>
+
+  <!-- Right Frame (rotated) -->
+  <g transform="rotate(15 260 256)">
+    <rect x="240" y="140" width="170" height="200" rx="4" fill="white"/>
+    <rect x="250" y="150" width="150" height="120" fill="#f4b400"/>
+  </g>
+</svg>

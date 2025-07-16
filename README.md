@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hallyuhub | All In One K-Pop E-Commerce Platform
 
-## Getting Started
+![Project Status](https://img.shields.io/badge/status-in%8progress-yellow)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=prisma&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌊 About Hallyuhub
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Hallyuhub** is an upcoming web platform dedicated for fans to purchase all things Hallyu (the "Korean Wave"). From K-Pop Albums to Photocards, my goal is to create a vibrant, centralized hub for fans worldwide. This project aims to connect users with Official Merchandise, and Albums.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚧 Project Status: Under Construction
 
-## Learn More
+This project is in the very early stages of development. Many features are still in the planning phase. I appreciate your interest and patience as i bring Hallyuhub to life!
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project is being built with a modern, scalable, and efficient technology stack:
 
-## Deploy on Vercel
+- **Framework:** [Next.js](https://nextjs.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (Planned)
+- **Theme Management:** [next-themes](https://github.com/pacocoursey/next-themes)
+- **Deployment:** [Vercel](https://vercel.com/)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Installation
+
+1.  Clone the repository:
+    ```sh
+    git clone [https://github.com/meliocool/hallyuhub.git](https://github.com/meliocool/hallyuhub.git)
+    ```
+2.  Navigate to the project directory:
+    ```sh
+    cd hallyuhub
+    ```
+3.  Install NPM packages:
+    ```sh
+    npm install
+    ```
+4.  Run the development server:
+    ```sh
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+---
+
+## 📧 Contact
+
+Dhitan - dhitanimam05@gmail.com
+
+Project Link: [https://github.com/meliocool/hallyuhub](https://github.com/meliocool/hallyuhub)
