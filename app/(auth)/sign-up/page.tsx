@@ -18,10 +18,15 @@ export const metadata: Metadata = {
   title: "Sign Up",
 };
 
-const SignUpPage = async (props: {
-  searchParams: { callbackUrl?: string };
+const SignUpPage = async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
 }) => {
-  const { callbackUrl } = await props.searchParams;
+  const callbackUrl = Array.isArray(searchParams.callbackUrl)
+    ? searchParams.callbackUrl[0]
+    : searchParams.callbackUrl;
+
   const session = await auth();
 
   if (session) {
