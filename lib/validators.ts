@@ -15,3 +15,24 @@ export const insertProductSchema = z.object({
   version: z.string().min(3, "Version must be at least 3 characters!"),
   price: z.coerce.bigint().min(1n, "Price must be at least Rp 1"),
 });
+
+// Schema for Users Sign In
+export const signInFormSchema = z.object({
+  email: z.email("Invalid Email Address"),
+  password: z.string().min(6, "Password must be at least 6 characters!"),
+});
+
+// Schema for Users Sign Up
+export const signUpFormSchema = z
+  .object({
+    name: z.string().min(3, "Name must be at least 3 characters!"),
+    email: z.email("Invalid Email Address"),
+    password: z.string().min(6, "Password must be at least 6 characters!"),
+    confirmPassword: z
+      .string()
+      .min(6, "Confirm password must be at least 6 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Password don't match!",
+    path: ["confirmPassword"],
+  });
