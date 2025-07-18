@@ -14,23 +14,21 @@ import Image from "next/image";
 import { APP_NAME } from "@/lib/constants";
 import SignUpForm from "./signup-form";
 
+type SignUpPageProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
 export const metadata: Metadata = {
   title: "Sign Up",
 };
 
-const SignUpPage = async ({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) => {
-  const callbackUrl = Array.isArray(searchParams.callbackUrl)
-    ? searchParams.callbackUrl[0]
-    : searchParams.callbackUrl;
+const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
+  const callbackUrl = searchParams.callbackUrl || "/";
 
   const session = await auth();
 
   if (session) {
-    return redirect(callbackUrl || "/");
+    return redirect(Array.isArray(callbackUrl) ? callbackUrl[0] : callbackUrl);
   }
 
   return (
