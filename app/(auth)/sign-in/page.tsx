@@ -15,7 +15,7 @@ import Image from "next/image";
 import { APP_NAME } from "@/lib/constants";
 
 type SignInPageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export const metadata: Metadata = {
@@ -23,11 +23,14 @@ export const metadata: Metadata = {
 };
 
 const SignInPage = async ({ searchParams }: SignInPageProps) => {
-  const callbackUrl = searchParams.callbackUrl || "/";
+  const resolvedSearchParams = await searchParams;
+  const callbackUrl = Array.isArray(resolvedSearchParams.callbackUrl)
+    ? resolvedSearchParams.callbackUrl[0]
+    : resolvedSearchParams.callbackUrl;
   const session = await auth();
 
   if (session) {
-    return redirect(Array.isArray(callbackUrl) ? callbackUrl[0] : callbackUrl);
+    return redirect(callbackUrl || "/");
   }
 
   return (
