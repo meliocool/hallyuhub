@@ -19,8 +19,8 @@ export function convertToPlainJSON<T>(value: T): T {
 export async function formatError(error: any) {
   if (error.name === "ZodError") {
     // Handle Zod Error
-    const errorFields = Object.keys(error.errors).map(
-      (field) => error.errors[field].message
+    const errorFields = Object.keys(error.issues).map(
+      (field) => error.issues[field].message
     );
     return errorFields.join(". ");
   } else if (
@@ -30,7 +30,7 @@ export async function formatError(error: any) {
     // Handle Prisma Error
     const errorField = error.meta?.target ? error.meta.target[0] : "Field";
     return `${
-      errorField.charAt(0).toUppercase() + errorField.slice(1)
+      errorField.charAt(0).toUpperCase() + errorField.slice(1)
     } already exists!`;
   } else {
     return typeof error.message === "string"
