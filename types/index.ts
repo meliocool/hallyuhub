@@ -1,12 +1,30 @@
 import { z } from "zod";
-import { insertProductSchema } from "@/lib/validators";
+import {
+  insertProductSchema,
+  cartItemSchema,
+  insertCartSchema,
+} from "@/lib/validators";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export type InsertProductPayload = z.infer<typeof insertProductSchema>;
 
-export type Product = Omit<InsertProductPayload, "price"> & {
+export type ProductVariant = {
   id: string;
-  rating: string;
-  price: string;
+  variantType: string;
+  benefitType: string | null;
+  price: bigint;
+  stock: number;
+  images: string[];
+};
+
+export type Product = Omit<InsertProductPayload, "variants"> & {
+  id: string;
+  rating: Decimal;
   createdAt: Date;
   updatedAt: Date;
+  numReviews: number;
+  variants: ProductVariant[];
 };
+
+export type Cart = z.infer<typeof insertCartSchema>;
+export type CartItem = z.infer<typeof cartItemSchema>;

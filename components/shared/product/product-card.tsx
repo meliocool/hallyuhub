@@ -5,6 +5,11 @@ import ProductPrice from "./product-price";
 import { Product } from "@/types";
 
 const ProductCard = ({ product }: { product: Product }) => {
+  const totalStock = product.variants.reduce(
+    (acc, variant) => acc + variant.stock,
+    0
+  );
+  const minPrice = Math.min(...product.variants.map((v) => Number(v.price)));
   return (
     <Card className="w-full max-w-sm border border-border">
       <CardHeader className="p-0 items-center">
@@ -23,9 +28,9 @@ const ProductCard = ({ product }: { product: Product }) => {
         <div className="text-xs">{product.groupName}</div>
         <Link href={`/product/${product.slug}`}>{product.name}</Link>
         <div className="flex-between gap-4">
-          <p>{product.rating} stars</p>
-          {product.stock > 0 ? (
-            <ProductPrice value={Number(product.price)} />
+          <p>{product.rating.toString()} stars</p>
+          {totalStock > 0 ? (
+            <ProductPrice value={minPrice} />
           ) : (
             <p className="text-destructive">Out of Stock!</p>
           )}

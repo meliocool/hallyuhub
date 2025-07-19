@@ -6,6 +6,9 @@ import { convertToPlainJSON } from "@/lib/utils";
 export async function getLatestProducts() {
   const data = await prisma.product.findMany({
     take: LATEST_PRODUCTS_LIMIT,
+    include: {
+      variants: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -14,7 +17,11 @@ export async function getLatestProducts() {
 
 // Get single Product by Slug
 export async function getProductBySlug(slug: string) {
-  return await prisma.product.findFirst({
+  const data = await prisma.product.findUnique({
     where: { slug: slug },
+    include: {
+      variants: true,
+    },
   });
+  return convertToPlainJSON(data);
 }
