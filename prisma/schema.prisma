@@ -36,8 +36,9 @@ model ProductVariant {
   stock       Int
   images      String[]
 
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String  @db.Uuid
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String     @db.Uuid
+  cartItems CartItem[]
 }
 
 model User {
@@ -100,7 +101,6 @@ model Cart {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId        String?  @db.Uuid
   sessionCartId String
-  items         Json[]   @default([]) @db.Json
   itemsPrice    BigInt
   totalPrice    BigInt
   shippingPrice BigInt
@@ -108,4 +108,18 @@ model Cart {
   createdAt     DateTime @default(now()) @db.Timestamp(6)
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cartItems CartItem[]
+}
+
+model CartItem {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quantity         Int
+  price            BigInt
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId           String         @db.Uuid
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  productVariantId String         @db.Uuid
+
+  @@unique([cartId, productVariantId])
 }

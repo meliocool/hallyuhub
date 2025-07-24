@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductImages from "@/components/shared/product/product-images";
 import ProductPrice from "@/components/shared/product/product-price";
+import AddToCart from "./add-to-cart";
 
 export default function ProductDetailsView({ product }: { product: Product }) {
   // ? -- React moment lol -- ?
   const [currentImage, setCurrentImage] = useState(
-    product.images[0] || product.variants[0]?.images[0] || ""
+    product.images[1] || product.variants[0]?.images[0] || ""
   );
 
   const [selectedVariantType, setSelectedVariantType] = useState(
@@ -68,6 +69,7 @@ export default function ProductDetailsView({ product }: { product: Product }) {
       setCurrentImage(selectedVariant.images[0]);
     }
   }, [selectedVariant]);
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
       <div className="md:col-span-2">
@@ -169,7 +171,19 @@ export default function ProductDetailsView({ product }: { product: Product }) {
             </div>
             {selectedVariant && selectedVariant.stock > 0 && (
               <div className="flex justify-center items-center mt-4">
-                <Button className="w-full">Add To Cart</Button>
+                <AddToCart
+                  item={{
+                    productId: product.id,
+                    variantId: selectedVariant.id,
+                    variantType: selectedVariant.variantType,
+                    benefitType: selectedVariant.benefitType,
+                    name: `${product.name} - ${selectedVariant.variantType}`,
+                    slug: product.slug,
+                    price: selectedVariant.price,
+                    qty: 1,
+                    image: selectedVariant.images?.[0] || product.images![0],
+                  }}
+                />
               </div>
             )}
           </CardContent>
