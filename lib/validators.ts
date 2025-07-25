@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const priceStuff = z.coerce.bigint().min(1n, "Price must be at least Rp 1");
+const priceStuff = z.coerce.bigint().nonnegative("Price cannot be negative");
 
 const productVariantSchema = z.object({
   variantType: z.string().min(1, { message: "Variant type is required" }),

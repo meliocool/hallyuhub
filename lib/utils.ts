@@ -48,3 +48,20 @@ export function round2(value: number | string) {
     throw new Error("Value is neither Number nor String");
   }
 }
+
+export function formatRupiah(value: bigint | string | number) {
+  if (typeof value === "string") {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(BigInt(value));
+  }
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}

@@ -10,3 +10,4 @@ export const SIGNIN_DEFAULT_VALUES = {
   email: "",
   password: "",
 };
+export const TAX_RATE = 11n;
