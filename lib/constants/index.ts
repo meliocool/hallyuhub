@@ -11,3 +11,4 @@ export const SIGNIN_DEFAULT_VALUES = {
   password: "",
 };
 export const TAX_RATE = 11n;
+export const LOW_STOCK_THRESHOLD = 5;

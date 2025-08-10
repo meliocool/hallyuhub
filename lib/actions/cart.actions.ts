@@ -1,6 +1,6 @@
 "use server";
 
-import { CartItem } from "@/types";
+import { CartItem, GetMyCartResult, MiniCartLine, MiniCartView } from "@/types";
 import { cookies } from "next/headers";
 import { convertToPlainJSON, formatError } from "../utils";
 import { auth } from "@/auth";
@@ -8,30 +8,51 @@ import { prisma } from "@/db/prisma";
 import { cartItemSchema } from "../validators";
 import { TAX_RATE } from "../constants";
 import { revalidatePath } from "next/cache";
-import {
-  CartItem as PrismaCartItem,
-  ProductVariant,
-} from "../generated/prisma";
+// import {
+//   CartItem as PrismaCartItem,
+//   ProductVariant,
+// } from "../generated/prisma";
 
-type CartItemWithVariant = PrismaCartItem & {
-  variant: ProductVariant;
+// type CartItemWithVariant = PrismaCartItem & {
+//   variant: ProductVariant;
+// };
+
+// const calcPrice = (items: CartItemWithVariant[]) => {
+//   const itemsPrice = items.reduce(
+//     (acc, item) => acc + BigInt(item.variant.price) * BigInt(item.quantity),
+//     0n
+//   );
+//   // TODO -> Shipping Price beneran Integrated with Google API (Kalo gratis rofl)
+//   const shippingPrice = 0n; // ! Default Value dulu
+//   const taxPrice = (itemsPrice * TAX_RATE) / 100n;
+//   const totalPrice = itemsPrice + shippingPrice + taxPrice; // TODO -> + SHipping Price as well
+//   return {
+//     itemsPrice,
+//     shippingPrice,
+//     taxPrice,
+//     totalPrice,
+//   };
+// };
+
+type CartItemForTotals = { price: bigint | string | number; quantity: number };
+
+const toBI = (v: unknown): bigint => {
+  if (typeof v === "bigint") return v;
+  if (typeof v === "number") return BigInt(v);
+  if (typeof v === "string" && v !== "") return BigInt(v);
+  return 0n;
 };
 
-const calcPrice = (items: CartItemWithVariant[]) => {
+const calcPrice = (items: CartItemForTotals[]) => {
   const itemsPrice = items.reduce(
-    (acc, item) => acc + BigInt(item.variant.price) * BigInt(item.quantity),
+    (acc, item) => acc + toBI(item.price) * BigInt(item.quantity),
     0n
   );
-  // TODO -> Shipping Price beneran Integrated with Google API (Kalo gratis rofl)
-  const shippingPrice = 0n; // ! Default Value dulu
-  const taxPrice = (itemsPrice * TAX_RATE) / 100n;
-  const totalPrice = itemsPrice + shippingPrice + taxPrice; // TODO -> + SHipping Price as well
-  return {
-    itemsPrice,
-    shippingPrice,
-    taxPrice,
-    totalPrice,
-  };
+  const taxRateBI = typeof TAX_RATE === "bigint" ? TAX_RATE : BigInt(TAX_RATE);
+  const shippingPrice = 0n;
+  const taxPrice = (itemsPrice * taxRateBI) / 100n;
+  const totalPrice = itemsPrice + shippingPrice + taxPrice;
+  return { itemsPrice, shippingPrice, taxPrice, totalPrice };
 };
 
 export async function addItemToCart(data: CartItem) {
@@ -119,7 +140,7 @@ export async function addItemToCart(data: CartItem) {
       throw new Error("Could not retrieve cart after update");
     }
     const newTotals = calcPrice(
-      updatedCartWithItems.items as CartItemWithVariant[]
+      updatedCartWithItems.items as unknown as CartItemForTotals[]
     );
     await prisma.cart.update({
       where: {
@@ -145,7 +166,7 @@ export async function addItemToCart(data: CartItem) {
   }
 }
 
-export async function getMyCart() {
+export async function getMyCart(): Promise<GetMyCartResult> {
   const sessionCartId = (await cookies()).get("sessionCartId")?.value;
   if (!sessionCartId) return undefined;
 
@@ -167,12 +188,65 @@ export async function getMyCart() {
 
   return convertToPlainJSON({
     ...cart,
-    items: cart.cartItems,
+    items: cart.cartItems.map((ci) => ({
+      productVariantId: ci.productVariantId,
+      quantity: ci.quantity,
+      price: ci.price,
+    })),
     itemsPrice: cart.itemsPrice.toString(),
     totalPrice: cart.totalPrice.toString(),
     shippingPrice: cart.shippingPrice.toString(),
     taxPrice: cart.taxPrice.toString(),
   });
+}
+
+export async function getMyMiniCartView(): Promise<MiniCartView> {
+  const sessionCartId = (await cookies()).get("sessionCartId")?.value;
+  if (!sessionCartId) return { items: [], total: 0 };
+  const session = await auth();
+  const userId = session?.user?.id as string | undefined;
+
+  const cart = await prisma.cart.findFirst({
+    where: userId ? { userId } : { sessionCartId },
+    include: {
+      cartItems: {
+        include: {
+          variant: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!cart) return { items: [], total: 0 };
+
+  const items: MiniCartLine[] = cart.cartItems.map((ci) => {
+    const v = ci.variant;
+    const p = v.product;
+
+    const unitPrice = Number(ci.price ?? v.price);
+    const image = v.images?.[0] ?? p.images?.[0];
+
+    return {
+      productId: p.id,
+      variantId: v.id,
+      name: p.name,
+      slug: p.slug,
+      variantType: v.variantType,
+      benefitType: v.benefitType ?? null,
+      image,
+      qty: ci.quantity,
+      price: unitPrice,
+      stock: v.stock,
+    };
+  });
+
+  const total = items.reduce((sum, it) => sum + it.price * it.qty, 0);
+
+  return { items, total };
 }
 
 export async function removeItemFromCart(variantId: string) {
@@ -229,7 +303,7 @@ export async function removeItemFromCart(variantId: string) {
       });
     } else {
       const newTotals = calcPrice(
-        updatedCartWithItems.items as CartItemWithVariant[]
+        updatedCartWithItems.items as unknown as CartItemForTotals[]
       );
       await prisma.cart.update({
         where: {
@@ -250,5 +324,61 @@ export async function removeItemFromCart(variantId: string) {
       success: false,
       message: formatError(error),
     };
+  }
+}
+
+export async function deleteItemFromCart(variantId: string) {
+  try {
+    const sessionCartId = (await cookies()).get("sessionCartId")?.value;
+    if (!sessionCartId) throw new Error("Cart session not found!");
+
+    const cart = await getMyCart();
+    if (!cart) throw new Error("Cart not found");
+
+    const existingItem = await prisma.cartItem.findUnique({
+      where: {
+        cartId_productVariantId: {
+          cartId: cart.id,
+          productVariantId: variantId,
+        },
+      },
+    });
+
+    if (!existingItem) {
+      return { success: true, message: "Item already removed" };
+    }
+
+    await prisma.cartItem.delete({
+      where: { id: existingItem.id },
+    });
+
+    const updatedCartWithItems = await getMyCart();
+    if (!updatedCartWithItems) {
+      await prisma.cart.update({
+        where: { id: cart.id },
+        data: {
+          itemsPrice: 0n,
+          shippingPrice: 0n,
+          taxPrice: 0n,
+          totalPrice: 0n,
+        },
+      });
+    } else {
+      const newTotals = calcPrice(
+        updatedCartWithItems.items as unknown as {
+          price: bigint | string | number;
+          quantity: number;
+        }[]
+      );
+      await prisma.cart.update({
+        where: { id: cart.id },
+        data: newTotals,
+      });
+    }
+
+    revalidatePath("/cart");
+    return { success: true, message: "Item removed from cart" };
+  } catch (error) {
+    return { success: false, message: formatError(error) };
   }
 }

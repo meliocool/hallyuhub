@@ -28,3 +28,33 @@ export type Product = Omit<InsertProductPayload, "variants"> & {
 
 export type Cart = z.infer<typeof insertCartSchema>;
 export type CartItem = z.infer<typeof cartItemSchema>;
+
+export type GetMyCartItem = { productVariantId: string; quantity: number };
+export type GetMyCartResult =
+  | {
+      id: string;
+      items: GetMyCartItem[];
+      itemsPrice: string;
+      totalPrice: string;
+      shippingPrice: string;
+      taxPrice: string;
+    }
+  | undefined;
+
+export type MiniCartLine = {
+  productId: string;
+  variantId: string;
+  name: string;
+  slug: string;
+  variantType?: string;
+  benefitType?: string | null;
+  image: string;
+  qty: number;
+  price: number;
+  stock: number;
+};
+
+export type MiniCartView = {
+  items: MiniCartLine[];
+  total: number;
+};
