@@ -12,3 +12,11 @@ export const SIGNIN_DEFAULT_VALUES = {
 };
 export const TAX_RATE = 11n;
 export const LOW_STOCK_THRESHOLD = 5;
+export const SHIPPING_ADDRESS_DEFAULT_VALUES = {
+  fullName: "",
+  streetAddress: "",
+  city: "",
+  postalCode: "",
+  country: "Indonesia",
+  saveToProfile: false,
+};
