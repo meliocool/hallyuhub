@@ -5,9 +5,11 @@ import { cookies } from "next/headers";
 import { convertToPlainJSON, formatError } from "../utils";
 import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
-import { cartItemSchema } from "../validators";
-import { TAX_RATE } from "../constants";
+import { cartItemSchema, shippingAddressSchema } from "../validators";
+import { HOME_LAT_LNG, TAX_RATE } from "../constants";
 import { revalidatePath } from "next/cache";
+import { geocodeViaApiRoute, haversineKm, shippingFeeByKm } from "../geo";
+import { updateUserAddress } from "./user.actions";
 // import {
 //   CartItem as PrismaCartItem,
 //   ProductVariant,
@@ -43,17 +45,124 @@ const toBI = (v: unknown): bigint => {
   return 0n;
 };
 
-const calcPrice = (items: CartItemForTotals[]) => {
+const calcPrice = (
+  items: CartItemForTotals[],
+  shippingPriceBI: bigint = 0n
+) => {
   const itemsPrice = items.reduce(
     (acc, item) => acc + toBI(item.price) * BigInt(item.quantity),
     0n
   );
   const taxRateBI = typeof TAX_RATE === "bigint" ? TAX_RATE : BigInt(TAX_RATE);
-  const shippingPrice = 0n;
+  const shippingPrice = shippingPriceBI;
   const taxPrice = (itemsPrice * taxRateBI) / 100n;
   const totalPrice = itemsPrice + shippingPrice + taxPrice;
   return { itemsPrice, shippingPrice, taxPrice, totalPrice };
 };
+
+export async function applyShippingAddressAndRepriceCart(input: {
+  address: {
+    fullName: string;
+    streetAddress: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    lat?: number;
+    lng?: number;
+  };
+  saveToProfile: boolean;
+}) {
+  try {
+    const session = await auth();
+    const userId = session?.user?.id ?? null;
+    const sessionCartId = (await cookies()).get("sessionCartId")?.value;
+    if (!sessionCartId && !userId) throw new Error("Cart session not found.");
+
+    const cart = await prisma.cart.findFirst({
+      where: userId ? { userId: userId } : { sessionCartId: sessionCartId },
+      include: {
+        cartItems: {
+          include: {
+            variant: true,
+          },
+        },
+      },
+    });
+    if (!cart) throw new Error("Cart not found.");
+
+    const addr = shippingAddressSchema.parse(input.address);
+
+    let { lat, lng } = addr;
+    let displayName: string | undefined;
+    if (lat == null || lng == null) {
+      const q = `${addr.streetAddress}, ${addr.city}, ${addr.postalCode}, ${addr.country}`;
+      const geo = await geocodeViaApiRoute(q);
+      if (!geo) throw new Error("Failed to geocode address.");
+      lat = geo.lat;
+      lng = geo.lng;
+      displayName = geo.displayName;
+    }
+
+    if (
+      !Number.isFinite(HOME_LAT_LNG.lat) ||
+      !Number.isFinite(HOME_LAT_LNG.lng)
+    ) {
+      throw new Error("HOME_LAT/HOME_LNG not set.");
+    }
+
+    const km = haversineKm(HOME_LAT_LNG, { lat, lng });
+    const shippingBI = shippingFeeByKm(km);
+
+    const itemsForTotals: CartItemForTotals[] = cart.cartItems.map((i) => ({
+      price: i.price,
+      quantity: i.quantity,
+    }));
+    const totals = calcPrice(itemsForTotals, shippingBI);
+
+    await prisma.cart.update({
+      where: { id: cart.id },
+      data: {
+        itemsPrice: totals.itemsPrice,
+        shippingPrice: totals.shippingPrice,
+        taxPrice: totals.taxPrice,
+        totalPrice: totals.totalPrice,
+      },
+    });
+
+    if (input.saveToProfile && userId) {
+      const saveRes = await updateUserAddress({
+        ...addr,
+        lat,
+        lng,
+      });
+
+      if (!saveRes?.success)
+        console.warn("[savetoprofile] Failed: ", saveRes?.message);
+    }
+
+    return {
+      success: true,
+      message: "Shipping applied.",
+      distanceKm: Number(km.toFixed(2)),
+      itemsPrice: totals.itemsPrice.toString(),
+      taxPrice: totals.taxPrice.toString(),
+      shippingPrice: totals.shippingPrice.toString(),
+      totalPrice: totals.totalPrice.toString(),
+      normalizedAddress: {
+        ...addr,
+        lat,
+        lng,
+        ...(displayName && { displayName }),
+      },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Failed to apply shipping.",
+    };
+  }
+}
 
 export async function addItemToCart(data: CartItem) {
   try {

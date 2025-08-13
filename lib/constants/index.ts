@@ -20,3 +20,7 @@ export const SHIPPING_ADDRESS_DEFAULT_VALUES = {
   country: "Indonesia",
   saveToProfile: false,
 };
+export const HOME_LAT_LNG = {
+  lat: Number(process.env.HOME_LAT),
+  lng: Number(process.env.HOME_LNG),
+};

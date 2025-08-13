@@ -9,7 +9,7 @@ import {
   StreetAddressField,
 } from "@/types";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { shippingAddressSchema } from "@/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -26,12 +26,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader } from "lucide-react";
-import { updateUserAddress } from "@/lib/actions/user.actions";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { applyShippingAddressAndRepriceCart } from "@/lib/actions/cart.actions";
 
 const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
-  const router = useRouter();
+  // const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [saveToProfile, setSaveToProfile] = useState(false);
 
   const form = useForm<z.infer<typeof shippingAddressSchema>>({
     resolver: zodResolver(shippingAddressSchema),
@@ -42,12 +45,33 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
     values
   ) => {
     startTransition(async () => {
-      const res = await updateUserAddress(values);
+      const res = await applyShippingAddressAndRepriceCart({
+        address: values,
+        saveToProfile,
+      });
       if (!res.success) {
         toast.error(res.message);
         return;
       }
-      router.push("/payment-method");
+      if (
+        typeof window !== "undefined" &&
+        process.env.NODE_ENV !== "production"
+      ) {
+        console.groupCollapsed(
+          "%cCheckout repricing (dev)",
+          "color:#22c55e;font-weight:bold;"
+        );
+        console.log("Normalized address:", res.normalizedAddress);
+        console.log("Distance (km):", res.distanceKm);
+        console.table([
+          { field: "itemsPrice", value: res.itemsPrice }, // strings from server
+          { field: "shippingPrice", value: res.shippingPrice },
+          { field: "taxPrice", value: res.taxPrice },
+          { field: "totalPrice", value: res.totalPrice },
+        ]);
+        console.groupEnd();
+      }
+      // router.push("/payment-method");
     });
   };
 
@@ -144,6 +168,25 @@ const ShippingAddressForm = ({ address }: { address: ShippingAddress }) => {
                 )}
               />
             </div>
+            <Label className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-yellow-600 has-[[aria-checked=true]]:bg-yellow-50 dark:has-[[aria-checked=true]]:border-yellow-900 dark:has-[[aria-checked=true]]:bg-yellow-950">
+              <Checkbox
+                id="save-to-profile"
+                checked={saveToProfile}
+                onCheckedChange={(checked) =>
+                  setSaveToProfile(Boolean(checked))
+                }
+                className="data-[state=checked]:border-yellow-600 data-[state=checked]:bg-yellow-600 data-[state=checked]:text-white dark:data-[state=checked]:border-yellow-700 dark:data-[state=checked]:bg-yellow-700"
+              />
+              <div className="grid gap-1.5 font-normal">
+                <p className="text-sm leading-none font-medium">
+                  Save to profile
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  This will save your shipping address to your account for
+                  future orders.
+                </p>
+              </div>
+            </Label>
             <div className="flex gap-2">
               <Button type="submit" disabled={isPending}>
                 {isPending ? (
